@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:workout/pages/workout_info.dart';
+import 'package:workout/pages/workouts_for_muscle.dart';
 import 'package:workout/shared/components/clickable_card.dart';
 
 import '../services/workout_service.dart';
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  MyHomePage({super.key, required this.title});
 
   final String title;
-  final WorkoutService workoutService = const WorkoutService();
+  final WorkoutService workoutService = WorkoutService();
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
@@ -18,19 +18,24 @@ class _MyHomePageState extends State<MyHomePage> {
   static const pages = [
     {'label': 'Upper Body', 'icon': '💪'},
     {'label': 'Lower Body', 'icon': '🦵'},
-    {'label': 'Core', 'icon': '🦺'}
+    {'label': 'Core', 'icon': '🦺'},
+    {'label': 'Other', 'icon': '🏋️'},
   ];
 
-  void _onPageSelected(String page) {
-    setState(() {
-      var defaultWorkout = getWorkoutForMuscle(page);
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) =>
-                WorkoutInfoPage(title: page, workout: defaultWorkout)),
-      );
+  void _onPageSelected(String page) async {
+    widget.workoutService
+        .getWorkoutNamesForMuscle(page.replaceAll(" ", "").toLowerCase())
+        .then((value) {
+      setState(() {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => WorkoutsForMusclePage(
+                  muscle: page,
+                  workouts: value,
+                  workoutService: widget.workoutService)),
+        );
+      });
     });
   }
 

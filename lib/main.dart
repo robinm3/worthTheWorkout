@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
             seedColor: const Color.fromARGB(255, 224, 172, 112)),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
