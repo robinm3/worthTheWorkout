@@ -26,13 +26,11 @@ class WorkoutInfoPage extends StatelessWidget {
             icon: const Icon(Icons.arrow_back),
             onPressed: () => onBackButtonPressed(context),
           ),
+          title: Text(title),
+          centerTitle: true,
         ),
         body: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Text(workout.name, style: titleStyle),
-            ),
             Padding(
               padding: const EdgeInsets.all(20),
               child: SizedBox(

@@ -48,8 +48,8 @@ class Exercice {
           imageLink: exerciceSnapshot.data()!["image"],
           timeForRep: exerciceSnapshot.data()!["time"] ??= 50,
           repCount: 1,
-          setCount: 4,
-          restTime: 60,
+          setCount: exerciceSnapshot.data()!["sets"] ??= 3,
+          restTime: exerciceSnapshot.data()!["rest"] ??= 60,
           toFailure: false,
           videoLink: exerciceSnapshot.data()!["videoLink"],
         );

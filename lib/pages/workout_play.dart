@@ -1,7 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import '../shared/components/custom_circular_progress.dart';
 import '../types/workout_types.dart';
 
 class WorkoutPlay extends StatefulWidget {
@@ -19,7 +21,7 @@ class _WorkoutPlayState extends State<WorkoutPlay> {
   int currentSetCount = 0;
   bool isResting = false;
   bool isFinished = false;
-  bool isPaused = true;
+  bool isPaused = false;
   Timer? timer;
   int completedWorkoutTime = 0;
   int completedRepTime = 0;
@@ -29,6 +31,11 @@ class _WorkoutPlayState extends State<WorkoutPlay> {
   void initState() {
     super.initState();
     currentExercise = widget.workout.exercices[0];
+    if (exerciceNeedsTimer()) {
+      setState(() {
+        isPaused = true;
+      });
+    }
     startTimer();
   }
 
@@ -48,14 +55,13 @@ class _WorkoutPlayState extends State<WorkoutPlay> {
     if (isResting) {
       completedRestTime++;
       if (completedRestTime >= currentExercise!.restTime) {
+        SystemSound.play(SystemSoundType.alert);
         isResting = false;
         completedRestTime = 0;
         if (currentSetCount >= currentExercise!.setCount) {
           completedRepTime = 0;
-          _onNextExercise();
           return;
         }
-        _onNextSet();
       }
       return;
     }
@@ -80,6 +86,12 @@ class _WorkoutPlayState extends State<WorkoutPlay> {
       currentExercise = widget.workout.exercices[currentExerciseIndex];
       currentRepCount = 0;
       currentSetCount = 0;
+      isResting = false;
+      completedRepTime = 0;
+      completedRestTime = 0;
+      if (exerciceNeedsTimer()) {
+        isPaused = true;
+      }
     });
   }
 
@@ -88,6 +100,13 @@ class _WorkoutPlayState extends State<WorkoutPlay> {
       currentSetCount++;
       currentRepCount = 0;
     });
+    if (currentSetCount >= currentExercise!.setCount) {
+      setState(() {
+        completedRepTime = 0;
+      });
+      _onNextExercise();
+      return;
+    }
   }
 
   bool exerciceNeedsTimer() {
@@ -108,11 +127,53 @@ class _WorkoutPlayState extends State<WorkoutPlay> {
     return currentExercise!.timeForRep - completedRepTime;
   }
 
-  String getButtonText() {
+  String getNextExerciceButtonText() {
     if (!isFinished) {
       return "Skip";
     }
     return "Finished";
+  }
+
+  String getMainButtonText() {
+    if (isFinished) {
+      return "Finished";
+    }
+    if (isPaused) {
+      return "Start";
+    }
+    if (isResting) {
+      return "Skip rest";
+    }
+    if (!exerciceNeedsTimer()) {
+      return '${currentExercise!.repCount} reps done';
+    }
+    return "Pause";
+  }
+
+  void _onEndSet() {
+    if (isFinished) {
+      Navigator.pop(context);
+      return;
+    }
+    if (isPaused) {
+      setState(() {
+        isPaused = false;
+      });
+      return;
+    }
+    if (!isResting) {
+      _onNextSet();
+      if (currentExercise!.setCount - currentSetCount > 0) {
+        setState(() {
+          isResting = true;
+        });
+      }
+    } else {
+      setState(() {
+        isResting = false;
+        completedRestTime = 0;
+      });
+    }
   }
 
   @override
@@ -126,114 +187,89 @@ class _WorkoutPlayState extends State<WorkoutPlay> {
           ),
         ),
         body: Center(
-          child: Column(children: [
-            Text(currentExercise!.name,
-                style: Theme.of(context).textTheme.displayMedium),
+          child: Wrap(alignment: WrapAlignment.center, children: [
             SizedBox(
               width: 400,
-              height: 400,
-              child: Image.network(currentExercise!.imageLink),
-            ),
-            if (isResting)
-              Column(
-                children: [
-                  Text(
-                    'Rest',
-                    style: Theme.of(context).textTheme.displaySmall,
-                  ),
-                  CustomCircularProgress(
-                    progress: getProgressValue(),
-                    timeLeft: getTimeLeft(),
-                  ),
-                ],
-              ),
-            if (!isResting && !exerciceNeedsTimer())
-              Text(
-                '${currentExercise!.repCount} reps',
-                style: Theme.of(context).textTheme.displaySmall,
-              ),
-            if (!isResting && !isFinished && exerciceNeedsTimer())
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (completedRepTime > 0)
-                    CustomCircularProgress(
-                      progress: getProgressValue(),
-                      timeLeft: getTimeLeft(),
+              child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(currentExercise!.name,
+                            style: Theme.of(context).textTheme.headlineSmall),
+                        TextButton.icon(
+                            label: Text(getNextExerciceButtonText(),
+                                style: const TextStyle(fontSize: 20)),
+                            onPressed: () {
+                              if (!isFinished) {
+                                completedRestTime = 0;
+                                isResting = false;
+                                _onNextExercise();
+                              } else {
+                                Navigator.pop(context);
+                              }
+                            },
+                            icon: const Icon(Icons.skip_next)),
+                      ],
                     ),
-                  if (isPaused)
-                    IconButton(
-                        onPressed: () {
-                          setState(() {
-                            isPaused = false;
-                          });
-                        },
-                        icon: const Icon(Icons.play_arrow)),
-                  if (!isPaused)
-                    IconButton(
-                        onPressed: () {
-                          setState(() {
-                            isPaused = true;
-                          });
-                        },
-                        icon: const Icon(Icons.pause)),
-                ],
-              ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                    'Sets left: ${currentExercise!.setCount - currentSetCount}'),
-                if ((currentExercise!.setCount - currentSetCount) > 0)
-                  IconButton(
-                      onPressed: () {
-                        isResting = true;
-                        _onNextSet();
-                      },
-                      icon: const Icon(Icons.skip_next)),
-              ],
+                    Image.network(currentExercise!.imageLink),
+                  ]),
             ),
-            Padding(
-              padding: const EdgeInsets.all(30),
-              child: FloatingActionButton.extended(
-                onPressed: () {
-                  if (!isFinished) {
-                    _onNextExercise();
-                  } else {
-                    Navigator.pop(context);
-                  }
-                },
-                label:
-                    Text(getButtonText(), style: const TextStyle(fontSize: 20)),
-              ),
-            ),
+            SizedBox(
+                width: 300,
+                child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (isResting)
+                        Column(
+                          children: [
+                            Text(
+                              'Rest',
+                              style: Theme.of(context).textTheme.labelLarge,
+                            ),
+                            CustomCircularProgress(
+                              progress: getProgressValue(),
+                              timeLeft: getTimeLeft(),
+                            ),
+                          ],
+                        ),
+                      if (!isResting && !isFinished && exerciceNeedsTimer())
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            if (completedRepTime > 0)
+                              CustomCircularProgress(
+                                progress: getProgressValue(),
+                                timeLeft: getTimeLeft(),
+                              ),
+                            if (!isPaused)
+                              IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      isPaused = true;
+                                    });
+                                  },
+                                  icon: const Icon(Icons.pause)),
+                          ],
+                        ),
+                      Center(
+                        child: Text(
+                            'Sets left: ${currentExercise!.setCount - currentSetCount}'),
+                      ),
+                      Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            FloatingActionButton.extended(
+                              onPressed: () {
+                                _onEndSet();
+                              },
+                              label: Text(getMainButtonText(),
+                                  style: const TextStyle(fontSize: 20)),
+                            ),
+                          ]),
+                    ]))
           ]),
         ));
-  }
-}
-
-class CustomCircularProgress extends StatelessWidget {
-  const CustomCircularProgress(
-      {super.key, required this.timeLeft, required this.progress});
-  final int timeLeft;
-  final double progress;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 40,
-      child: Stack(children: [
-        const Center(
-            child: CircularProgressIndicator(
-          value: 1,
-          color: Colors.grey,
-        )),
-        Center(
-            child: CircularProgressIndicator(
-          value: progress,
-        )),
-        Center(child: Text('$timeLeft')),
-      ]),
-    );
   }
 }
