@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../shared/components/custom_circular_progress.dart';
-import '../types/workout_types.dart';
+import '../../shared/components/custom_circular_progress.dart';
+import '../../services/types/workout_types.dart';
 
 class WorkoutPlay extends StatefulWidget {
   const WorkoutPlay({super.key, required this.workout});

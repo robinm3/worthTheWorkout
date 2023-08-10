@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:workout/pages/workout_play.dart';
+import 'package:workout/pages/workouts/workout_play.dart';
 import 'package:workout/shared/components/clickable_card.dart';
-import '../types/workout_types.dart';
+import 'package:workout/shared/layouts/double_color_layout.dart';
+import '../../services/types/workout_types.dart';
 
 class WorkoutInfoPage extends StatelessWidget {
   const WorkoutInfoPage({Key? key, required this.title, required this.workout})
@@ -23,18 +24,26 @@ class WorkoutInfoPage extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: const Icon(
+              Icons.arrow_back,
+            ),
+            color: Theme.of(context).highlightColor,
             onPressed: () => onBackButtonPressed(context),
           ),
-          title: Text(title),
-          centerTitle: true,
+          backgroundColor: Theme.of(context).colorScheme.primary,
         ),
-        body: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: SizedBox(
+        body: DoubleColorLayout(
+          topColor: Theme.of(context).colorScheme.primary,
+          topChild: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Text(title,
+                style: Theme.of(context).primaryTextTheme.displaySmall),
+          ),
+          bottomChild: Column(
+            children: [
+              SizedBox(
                 height: 120,
+                width: MediaQuery.of(context).size.width,
                 child: ListView(
                     scrollDirection: Axis.horizontal,
                     physics: const BouncingScrollPhysics(),
@@ -60,23 +69,22 @@ class WorkoutInfoPage extends StatelessWidget {
                         ),
                     ]),
               ),
-            ),
-            const Spacer(),
-            Padding(
-              padding: const EdgeInsets.all(30),
-              child: FloatingActionButton.extended(
-                icon: const Icon(Icons.play_arrow),
-                onPressed: () {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => WorkoutPlay(workout: workout),
-                      ));
-                },
-                label: const Text("Start", style: TextStyle(fontSize: 20)),
-              ),
-            )
-          ],
+              Padding(
+                padding: const EdgeInsets.all(30),
+                child: FloatingActionButton.extended(
+                  icon: const Icon(Icons.play_arrow),
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => WorkoutPlay(workout: workout),
+                        ));
+                  },
+                  label: const Text("Start", style: TextStyle(fontSize: 20)),
+                ),
+              )
+            ],
+          ),
         ),
       );
 }

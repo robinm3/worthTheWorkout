@@ -1,51 +1,24 @@
-import '../types/workout_types.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:workout/services/interfaces/workout/workout_repo.dart';
+
+import 'interfaces/workout/workout_request.dart';
+import 'types/workout_types.dart';
 
 class WorkoutService {
-  WorkoutService();
+  WorkoutService(this.workoutRepo);
 
-  final CollectionReference workoutsCollection =
-      FirebaseFirestore.instance.collection("workouts");
-  final CollectionReference exercicesCollection =
-      FirebaseFirestore.instance.collection("exercices");
+  final WorkoutRepo workoutRepo;
 
-  Future<List<String>> getWorkoutNamesForMuscle(String muscleId) async {
-    final List<String> workoutNames = [];
-    final DocumentSnapshot workoutSnapshot =
-        await workoutsCollection.doc(muscleId).get();
-    if (workoutSnapshot.data() == null) {
-      throw Exception("No workout found for id $muscleId");
-    }
-    final Map<String, dynamic> workoutCollectionData =
-        workoutSnapshot.data() as Map<String, dynamic>;
-    final List<Map<String, dynamic>> workouts =
-        List<Map<String, dynamic>>.from(workoutCollectionData["workouts"]);
-
-    for (final Map<String, dynamic> workout in workouts) {
-      workoutNames.add(workout["label"]);
-    }
-
-    return workoutNames;
+  Future<List<BaseWorkout>> getWorkouts() async {
+    return await workoutRepo.getBaseWorkouts();
   }
 
-  Future<Workout> getWorkoutForMuscle(String muscleId, int workoutIndex) async {
-    final DocumentSnapshot workoutSnapshot =
-        await workoutsCollection.doc(muscleId).get();
-    if (workoutSnapshot.data() == null) {
-      throw Exception("No workout found for id $muscleId");
-    }
-    final Map<String, dynamic> workoutCollectionData =
-        workoutSnapshot.data() as Map<String, dynamic>;
-    final List<String> exerciceIds = List<String>.from(
-        workoutCollectionData["workouts"][workoutIndex]["exercices"]);
-    final List<Exercice> exercices = [];
-    for (final String exerciceId in exerciceIds) {
-      final DocumentSnapshot exerciceSnapshot =
-          await exercicesCollection.doc(exerciceId).get();
-      exercices.add(Exercice.fromSnapshot(
-          exerciceSnapshot as DocumentSnapshot<Map<String, dynamic>?>));
-    }
-    return Workout.fromDto(
-        workoutCollectionData["workouts"][workoutIndex], exercices);
+  Future<Workout> getWorkout(String workoutId) async {
+    return await workoutRepo.getWorkout(workoutId);
+  }
+
+  Future<void> createWorkout(
+      String muscleId, String label, List<String> exerciceIds) async {
+    await workoutRepo.addWorkout(WorkoutRequest(
+        muscleGroup: muscleId, label: label, exercices: exerciceIds));
   }
 }

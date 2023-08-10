@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class Workout {
   const Workout({
     required this.name,
@@ -18,8 +16,19 @@ class Workout {
   }
 }
 
+class BaseWorkout {
+  const BaseWorkout({
+    required this.name,
+    required this.id,
+  });
+
+  final String name;
+  final String id;
+}
+
 class Exercice {
   const Exercice({
+    required this.id,
     required this.name,
     required this.imageLink,
     required this.timeForRep,
@@ -30,6 +39,7 @@ class Exercice {
     this.videoLink,
   });
 
+  final String id;
   final String name;
   final String imageLink;
   final int timeForRep;
@@ -39,52 +49,55 @@ class Exercice {
   final bool toFailure;
   final String? videoLink;
 
-  static Exercice fromSnapshot(
-      DocumentSnapshot<Map<String, dynamic>?> exerciceSnapshot) {
-    switch (exerciceSnapshot.data()!["repType"]) {
+  static Exercice fromData(Map<String, dynamic>? data, String id) {
+    switch (data!["repType"]) {
       case "time":
         return Exercice(
-          name: exerciceSnapshot.data()!["label"],
-          imageLink: exerciceSnapshot.data()!["image"],
-          timeForRep: exerciceSnapshot.data()!["time"] ??= 50,
+          id: id,
+          name: data["label"],
+          imageLink: data["image"],
+          timeForRep: data["time"] ??= 50,
           repCount: 1,
-          setCount: exerciceSnapshot.data()!["sets"] ??= 3,
-          restTime: exerciceSnapshot.data()!["rest"] ??= 60,
+          setCount: data["sets"] ??= 3,
+          restTime: data["rest"] ??= 60,
           toFailure: false,
-          videoLink: exerciceSnapshot.data()!["videoLink"],
+          videoLink: data["videoLink"],
         );
       case "defaultRep":
         return Exercice(
-          name: exerciceSnapshot.data()!["label"],
-          imageLink: exerciceSnapshot.data()!["image"],
+          id: id,
+          name: data["label"],
+          imageLink: data["image"],
           timeForRep: 2,
           repCount: 10,
           setCount: 4,
           restTime: 60,
           toFailure: false,
-          videoLink: exerciceSnapshot.data()!["videoLink"],
+          videoLink: data["videoLink"],
         );
       case "doubleRep":
         return Exercice(
-          name: exerciceSnapshot.data()!["label"],
-          imageLink: exerciceSnapshot.data()!["image"],
+          id: id,
+          name: data["label"],
+          imageLink: data["image"],
           timeForRep: 2,
           repCount: 10,
           setCount: 4,
           restTime: 60,
           toFailure: false,
-          videoLink: exerciceSnapshot.data()!["videoLink"],
+          videoLink: data["videoLink"],
         );
       default:
         return Exercice(
-          name: exerciceSnapshot.data()!["label"],
-          imageLink: exerciceSnapshot.data()!["image"],
+          id: id,
+          name: data["label"],
+          imageLink: data["image"],
           timeForRep: 2,
           repCount: 10,
           setCount: 4,
           restTime: 60,
           toFailure: false,
-          videoLink: exerciceSnapshot.data()!["videoLink"],
+          videoLink: data["videoLink"],
         );
     }
   }

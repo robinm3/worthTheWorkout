@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:workout/pages/community.dart';
+import 'package:workout/pages/favorites.dart';
+import 'package:workout/pages/profile.dart';
+import 'pages/create.dart';
 import 'pages/home.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -17,13 +21,35 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Worth the workout',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color.fromARGB(255, 224, 172, 112)),
+        colorScheme:
+            ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 115, 98, 212)),
         useMaterial3: true,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: DefaultTabController(
+          length: 5,
+          child: Scaffold(
+            body: TabBarView(
+              children: [
+                MyHomePage(),
+                const FavoritesPage(),
+                const CreatePage(),
+                const CommunityPage(),
+                const ProfilePage(),
+              ],
+            ),
+            bottomNavigationBar: const TabBar(
+              indicator: BoxDecoration(),
+              tabs: [
+                Tab(icon: Icon(Icons.home)),
+                Tab(icon: Icon(Icons.star)),
+                Tab(icon: Icon(Icons.add_circle, size: 40)),
+                Tab(icon: Icon(Icons.people)),
+                Tab(icon: Icon(Icons.person)),
+              ],
+            ),
+          )),
     );
   }
 }
